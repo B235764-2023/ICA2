@@ -1,0 +1,1 @@
+esearch -db protein -query "glucose 6 phosphatase[Protein] AND Aves[Organism] NOT PARTIAL" | efetch -format fasta > g6p_aves.fasta
