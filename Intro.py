@@ -17,19 +17,29 @@ while True:
 
 print("The programme requires 2 inputs from the user")
 while True:
-    taxon_group = input("Enter your taxonomical group \n")
-    if taxon_group.isalpha() :
-        print("This is your input taxonomical group :",taxon_group)
-        break
-    elif taxon_group.isdigit() or taxon_group.isnumeric() or taxon_group.isspace():
+    taxon_group = input("Enter your taxonomical group \n").replace(" ", "_").lower()
+    if taxon_group.isdigit() or taxon_group.isnumeric() :
         print("Please type an alphabetical value")
+    else :
+        print("This is your taxonomical group:", taxon_group)
+        break
 
 while True:
-    protein_name = input("Enter your protein name\n").lower()
-    if protein_name.isalpha() :
-        print("This is your input protein name :",protein_name)
+    protein = input("Enter your protein name\n").lower()
+    protein_name=protein.replace(" ", "_")
+    if protein.isdigit() :
+        print("Please input a valid protein name:")
+    else :
+        print("Your protein name is:" ,protein)
         break
-    elif protein_name.isdigit() or protein_name.isnumeric() or protein_name.isspace():
-        print("Please type an alphabetical value")
 
 print("\nYour input Taxon group is:" ,taxon_group, "\nYour input Protein name is:",protein_name)
+
+import os
+
+fetchfasta = f'esearch -db protein -query "{protein_name}[Protein] AND {taxon_group}[Organism] NOT PARTIAL" | efetch -format fasta > {protein_name}_{taxon_group}.fasta'
+
+os.system(fetchfasta)
+
+print("Your output fasta file is",f"\n{protein_name}_{taxon_group}.fasta")
+
