@@ -44,33 +44,79 @@ while True:
     else :
         print("Haha! Very funny! Pick y or n")
 
-# The next while True loop requires the user to input the name of the taxonomic group of interest. The while true loop negates any integer/numerical value and requests the user to provide an alphabetical value instead. The taxonomic group then gets stored as a variable which then gets used later for esearch and efetch 
+# The next while True loop requires the user to input the name of the taxonomic group of interest. The while true loop negates any integer/numerical value and requests the user to provide an alphabetical value instead. The taxonomic group then gets stored as a variable which then gets used later for esearch and efetch
 time.sleep(1)
-print("The programme requires 2 inputs from the user")
 while True:
-    taxon_group = input("Enter your taxonomical group \n").replace(" ", "_").lower()
-    if not taxon_group.isalpha() :
-        print("Please type an alphabetical value")    
-    else :
-        print("This is your taxonomical group:", taxon_group)
+    print("The programme requires 2 inputs from the user")
+    while True:
+        taxon_group = input("Enter your taxonomical group \n").replace(" ", "_").lower()
+        if not taxon_group.isalpha() :
+            print("Please type an alphabetical value")
+        else :
+            print("\nThis is your taxonomical group:", taxon_group)
+            break
+
+    # This while True loop interacts with the user to provide a protein name and negates any standalone integer values. The input is stored as a variable and hgets used for esearch and efetch
+    time.sleep(1)
+    while True:
+        protein = input("Enter your protein name\n").lower()
+        protein_name=protein.replace(" ", "_")
+        if protein_name.isdigit() :
+            print("Please input a valid protein name:")
+        else :
+            print("\nYour protein name is:" ,protein)
+            break
+
+    # This print statement prints the user input taxonomical group and protein name by calling their variables.
+    time.sleep(1)
+    Inputs = ("\n\nYour input Taxon group is:" ,taxon_group, "\nYour input Protein name is:",protein)
+    for char in Inputs:
+        time.sleep(0.020)
+        sys.stdout.write(char)
+        sys.stdout.flush()
+
+    time.sleep(0.5)
+    Status = ("\n\n Searching NCBI Protein and fetching output fasta format...")
+    for char in Status:
+        time.sleep(0.020)
+        sys.stdout.write(char)
+        sys.stdout.flush()
+
+    fetchfasta = f"esearch -db protein -query '{protein_name}[Protein] AND {taxon_group}[Organism] NOT PARTIAL' | efetch -format fasta -stop 61 > {protein_name}_{taxon_group}.fasta"
+    os.system(fetchfasta)
+
+    Outputstatus = (f"\n\nYour output fasta file is {protein_name}_{taxon_group}.fasta")
+    for char in Outputstatus:
+        time.sleep(0.020)
+        sys.stdout.write(char)
+        sys.stdout.flush()
+
+    print("\nTotal number of sequences are:")
+
+    Totalseq = f'cat {protein_name}_{taxon_group}.fasta | grep ">" | awk -F\'[][]\' \'{{print$2}}\' | wc -l'
+
+    os.system(Totalseq)
+    time.sleep(1)
+
+    print("\nList of species are:")
+
+    Species = f'cat {protein_name}_{taxon_group}.fasta | grep ">" | awk -F\'[][]\' \'{{print$2}}\' | uniq -c | sort -nr'
+
+    os.system(Species)
+
+    Satisfied = False
+    while True:
+        Proceed = input("Are you satisfied with the resulting dataset?\n").lower()
+        if Proceed == 'no' or Proceed  == 'n':
+            break
+        elif Proceed  == 'yes' or Proceed == 'y':
+            Satisfied = True
+            break
+        else :
+            print("Make up your mind numpty!!!")
+
+    if Satisfied:
         break
 
-# This while True loop interacts with the user to provide a protein name and negates any standalone integer values. The input is stored as a variable and hgets used for esearch and efetch
-time.slleep(1)
-while True:    
-    protein = input("Enter your protein name\n").lower()
-    protein_name=protein.replace(" ", "_")
-    if not protein_name.isalnum() or not protein_name.isalpha():
-        print("Please input a valid protein name:")
-    else :
-        print("Your protein name is:" ,protein)
-        break
+print("I assume you are content. Now let us continue")
 
-# This print statement prints the user input taxonomical group and protein name by calling their variables. 
-
-print("\nYour input Taxon group is:" ,taxon_group, "\nYour input Protein name is:",protein)
-
-
-fetchfasta = f'esearch -db protein -query "{protein_name}[Protein] AND {taxon_group}[Organism] NOT PARTIAL" | efetch -format fasta > {protein_name}_{taxon_group}.fasta'
-
-os.system(fetchfasta)
