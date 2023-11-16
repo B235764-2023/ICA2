@@ -115,7 +115,7 @@ while True:
     
     Satisfied = False
     while True:
-        Proceed = input("Are you satisfied with the resulting dataset?\n").lower()
+        Proceed = input("Are you satisfied with the resulting dataset? y/n \n").lower()
         if Proceed == 'no' or Proceed  == 'n':
             print("Ok! Let us reroute you to input your taxon and protein of interest")
             break
@@ -128,8 +128,23 @@ while True:
     if Satisfied:
         break
 
-print("I assume you are content. Now let us continue")
+print("Assuming you are content,let us continue")
 
+print("\n")
+print("The programme will now align the fasta file using clustalo and further use plotcon to plot a graph")
+
+
+MSA = f"clustalo -i '{protein_name}_{taxon_group}.fasta' -o '{protein_name}'_'{taxon_group}'_Aligned.fasta --auto  -v --force" 
+
+os.system(MSA)
+
+print("\n Your output Aligned file is saved as '{protein_name}'_'{taxon_group}'_Aligned.fasta")
+
+size = input("\nPlease input a window size for the plot graph\n")
+
+Plot = f"plotcon -sequences '{protein_name}'_'{taxon_group}'_Aligned.fasta -graph png -winsize '{size}' -goutfile Align'{size}' --auto"
+
+os.system(Plot)
 
 
 
