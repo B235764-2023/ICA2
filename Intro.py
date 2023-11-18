@@ -1,10 +1,17 @@
 #!/usr/bin/python3
 
-#importing tthe os, system and subprocess modules
+#importing tthe os, system and subprocess modules for running commands. The matplotlib module has also been imported to display the image
 
 import os, sys, subprocess, time
+from matplotlib import pyplot as plt
+from matplotlib import image as mpimg
 
-# Introductory message to interact with the user and a brief description of what the programme does. In additio, there is a for loop that takes the variable and 'types' it out. The time module imports the sleep submodule and further aids in creating an effect of typing out the message
+cwd = os.getcwd()
+wd = cwd + "/Generic_Python3_Script/"
+os.mkdir(wd)
+os.chdir(wd)
+
+# Introductory message to interact with the user and a brief description of what the programme does. In addition, there is a for loop that takes the variable and 'types' it out. The time module imports the sleep submodule and further aids in creating an effect of typing out the message
 
 Intro_message = ("Welcome to the generic Python 3 programme/Script.\n The programme performs various processes on a set of protein fasta files.\n The user inputs the taxonomic identifier and the protein name which is then taken in for further processing.")
 
@@ -74,7 +81,8 @@ while True:
         time.sleep(0.020)
         sys.stdout.write(char)
         sys.stdout.flush()
-
+    
+    #This bit of code essentially uses esearch and finds out the total number of hits found in NCBI Protein database and provides the count. If the count is less than or equal to 1, the loop does not continue further and asks the user to input the values for taxonomic group and protein name again. If the count is greater than 1000, the count is set as 1000 to retrieve exactly 1000 sequences for the given input to be taken for further processing
     Totalcount = False
     totalseq = f"esearch -db protein -query '{protein_name}[protein] AND {taxon_group}[orgn] NOT partial' | xtract -pattern Count -element Count"
     total = int(subprocess.run(totalseq, shell=True, capture_output=True, text=True).stdout.strip())
@@ -89,6 +97,8 @@ while True:
         
     if Totalcount:
        break
+    
+   #Just a message to show what process is being carried out by the programme
 
     time.sleep(0.5)
     Status = ("\n\n Searching NCBI Protein and fetching output fasta format...")
@@ -96,6 +106,8 @@ while True:
         time.sleep(0.020)
         sys.stdout.write(char)
         sys.stdout.flush()
+    
+    #This is the actual bit in charge of searching and retrieving fasta sequences from NCBI Protein. The Input taxonomical group and protein name are stored as variables and get included here in the search and retrieve parameters
 
     fetchfasta = f"esearch -db protein -query '{protein_name}[Protein] AND {taxon_group}[Organism] NOT PARTIAL' | efetch -format fasta -start 1 -stop {total} > {protein_name}_{taxon_group}.fasta"
     os.system(fetchfasta)
@@ -108,11 +120,15 @@ while True:
 
 
     print("\nList of species are:")
+    
+    #This bit uses grep to scan through the fasta file and lists out the species in decreasing order of occurence and lists more repeating species on top
 
     Species = f'cat {protein_name}_{taxon_group}.fasta | grep ">" | awk -F\'[][]\' \'{{print$2}}\' | uniq -c | sort -nr'
 
     os.system(Species)
     
+    #This bit asks if the user is satisfied with the current dataset or not. If the user gives no, the loop breaks and reroutes the whole section goes back to asking the user for input again. The flag is set as false before entering a while true loop and is only changed when input is yes. This forces the loop to break and proceed further
+
     Satisfied = False
     while True:
         Proceed = input("Are you satisfied with the resulting dataset? y/n \n").lower()
@@ -133,18 +149,96 @@ print("Assuming you are content,let us continue")
 print("\n")
 print("The programme will now align the fasta file using clustalo and further use plotcon to plot a graph")
 
+#Using clustalo to Multiple sequence Align the fasta sequences fully with one iteration and kimura corrected. -v-v provides a detailed description of the process and updates the user. 
 
-MSA = f"clustalo -i '{protein_name}_{taxon_group}.fasta' -o '{protein_name}'_'{taxon_group}'_Aligned.fasta --auto  -v --force" 
+MSA = f"clustalo -i '{protein_name}_{taxon_group}.fasta' --full --full-iter --iter=1 --use-kimura -o '{protein_name}'_'{taxon_group}'_Aligned --outfmt=fa --force --threads=50 -v -v" 
 
 os.system(MSA)
 
-print("\n Your output Aligned file is saved as '{protein_name}'_'{taxon_group}'_Aligned.fasta")
+print(f"\n Your output Aligned file is saved as {protein_name}_{taxon_group}_Aligned.fasta")
+
+#This bit takes the user input for a window size for plotting a graph and stores it into a variable. The variable then gets input into the command
 
 size = input("\nPlease input a window size for the plot graph\n")
 
-Plot = f"plotcon -sequences '{protein_name}'_'{taxon_group}'_Aligned.fasta -graph png -winsize '{size}' -goutfile Align'{size}' --auto"
+Plot = f"plotcon -sequences '{protein_name}'_'{taxon_group}'_Aligned -graph png -winsize '{size}' -goutfile Align'{size}' --auto"
 
 os.system(Plot)
 
+print(f" Your graph is stored as Align{size}.1.png")
 
+print("Please wait while your image is being displayed")
+print("This could take a while")
+
+#using the matplotlib imported initially, this bit uses functions in it to display the output png image from plotcon
+
+image = mpimg.imread(f"Align{size}.1.png")
+plt.imshow(image)
+plt.axis('off')
+plt.show()
+
+#This lengthy section of code initiates by creating two distinct directories. One for storing all fasta files and the other for storing all patmatmotif files. The code takes the input fasta file and seperates each sequence present in it and saves each sequence as a seperate fasta file in the directory for individual fasta files. The code then runs patmatmotif on each individual fasta file and generates multiple .patmatmotif files and stores them in the directory for each patmatmotif file. The code then assimilates each patmatmotif file and creates one huge patmatmotif file with the list of domains of all sequences. The grep command in the end then goes to search the combined motif file and counts the specific motif and stores them in a seperate file
+
+fasta_dir = "Individual_fasta_files"
+os.mkdir(fasta_dir)
+
+patmatmotif_dir = "patmatmotif_outputs"
+os.mkdir(patmatmotif_dir)
+
+with open(f"{protein_name}_{taxon_group}.fasta") as my_file:
+    fasta_file_contents = my_file.read()
+
+list_fasta_seqs = [">" + seq \
+                    for seq in fasta_file_contents.split(">") if seq]
+
+for i,seq in enumerate(list_fasta_seqs, start=1):
+    file_path = os.path.join(fasta_dir, f"seq_{i}.fasta")
+    with open(file_path,"w") as output_file:
+        output_file.write(seq)
+
+for file in os.listdir(fasta_dir):
+    if file.endswith(".fasta"):
+        individual_fasta_file_path = os.path.join(fasta_dir, file)
+        output_file_path = os.path.join(patmatmotif_dir, f"{file}.patmatmotifs")
+
+    try:
+        with open(output_file_path,"w") as output_file:
+            subprocess.run(f"patmatmotifs -sequence {individual_fasta_file_path} -full -outfile {output_file_path}", shell=True)
+    except:
+        print(f"\n Error in processing patmatmotif files")
+
+combined_output_filename = "combined_patmatmotifs_result.txt"
+
+with open(combined_output_filename, "w") as combined_file:
+    for output_filename in os.listdir(patmatmotif_dir):
+        if output_filename.endswith(".patmatmotifs"):
+            output_file_path = os.path.join(patmatmotif_dir, output_filename)
+
+            with open(output_file_path, "r") as output_file:
+                combined_file.write(output_file.read() + "\n")
+
+Allmotifs = f"cat combined_patmatmotifs_result.txt | grep Motif | cut -d'=' -f2 | sort | uniq -c | sort -nr > List_of_Motifs.txt"
+
+subprocess.run(Allmotifs, shell=True, check=True)
+
+print("\n All patmatmotifs results are combined into combined_patmatmotifs_result.txt")
+
+print("\n List of all motifs is stored in List_of_Motifs.txt")
+
+print("This next bit will convert your list of input protein fasta sequences into Nucleotide sequences which can later be used for further analysis")
+
+#This bit uses an EMBOSS backtranseq programme which converts protein sequences into their corresponding initial Nucleotide codons. This can be used for future further processing in terms of evolutionary analyses, BLAST, similarity etc. This adds relevant biological data that can be later used for parallel analyses. 
+
+PtoN =f" backtranseq -sequence '{protein_name}_{taxon_group}.fasta' -cfile Ehuman.cut -outfile Nucleotide_sequences"
+os.system(PtoN)
+
+print("\n List of all Nucleotide codons for all sequences is stored in Nucleotide_sequences")
+
+
+Outro_message = "This brings us to the end of the Programme.\n Hope this Generic Python3 Programme/Script was useful in providing you the required data and was helpful.\n See ya!\n"
+
+for char in Outro_message:
+    time.sleep(0.080)
+    sys.stdout.write(char)
+    sys.stdout.flush()
 
