@@ -13,7 +13,7 @@ os.chdir(wd)
 
 # Introductory message to interact with the user and a brief description of what the programme does. In addition, there is a for loop that takes the variable and 'types' it out. The time module imports the sleep submodule and further aids in creating an effect of typing out the message
 
-Intro_message = ("Welcome to the generic Python 3 programme/Script.\n The programme performs various processes on a set of protein fasta files.\n The user inputs the taxonomic identifier and the protein name which is then taken in for further processing.")
+Intro_message = ("Welcome to the generic Python 3 programme/Script.\n The programme performs various processes on a set of protein fasta files.\nThe programme downloads a fasta file for all the sequences of protein and taxonomical group input by the user.\n\n The programme then proceeds to find conserved regions within each protein using clustalo to perform multiple sequence alignment and further plot a graph to represent the same.\n In the steps after, the programme uses patmatmotifs to find motifs in each sequence and PROSITE database.\nThe final step by the programme is to use an EMBOSS Tool to convert the set of protein sequences into their Nucleotide codon counterparts\n. ")
 
 for char in Intro_message:
     time.sleep(0.020)
@@ -28,11 +28,11 @@ while True:
         print("Initialising Programme countdown...")
         time.sleep(1)
         print("beep boop beep boop")
-        time.sleep(1)
+        time.sleep(0.75)
         print("5.....")
         time.sleep(0.5)
         print("4....")
-        time.sleep(0.5)
+        time.sleep(0.4)
         print("3...")
         time.sleep(0.3)
         print("2..")
@@ -93,6 +93,8 @@ while True:
     elif total > 1000 or total == 1000:
         total = 1000
     
+    print("\nIf the total number of sequences are greater than 1000, the code sets it to retrieve only 1000 sequences")
+    time.sleep(0.5)
     print("\nTotal number of sequences for your input taxonomical group and protein is: ", total)
         
     if Totalcount:
@@ -118,6 +120,7 @@ while True:
         sys.stdout.write(char)
         sys.stdout.flush()
 
+    time.sleep(0.5)
 
     print("\nList of species are:")
     
@@ -128,7 +131,7 @@ while True:
     os.system(Species)
     
     #This bit asks if the user is satisfied with the current dataset or not. If the user gives no, the loop breaks and reroutes the whole section goes back to asking the user for input again. The flag is set as false before entering a while true loop and is only changed when input is yes. This forces the loop to break and proceed further
-
+    time.sleep(0.5)
     Satisfied = False
     while True:
         Proceed = input("Are you satisfied with the resulting dataset? y/n \n").lower()
@@ -145,7 +148,7 @@ while True:
         break
 
 print("Assuming you are content,let us continue")
-
+time.sleep(0.5)
 print("\n")
 print("The programme will now align the fasta file using clustalo and further use plotcon to plot a graph")
 
@@ -156,10 +159,15 @@ MSA = f"clustalo -i '{protein_name}_{taxon_group}.fasta' --full --full-iter --it
 os.system(MSA)
 
 print(f"\n Your output Aligned file is saved as {protein_name}_{taxon_group}_Aligned.fasta")
-
+time.sleep(0.5)
 #This bit takes the user input for a window size for plotting a graph and stores it into a variable. The variable then gets input into the command
-
-size = input("\nPlease input a window size for the plot graph\n")
+while True:
+    size = input("\nPlease input a window size for the plot graph\n")
+    if not size.isdigit():
+        print("Enter a whole number")
+    else:
+        print("Your input window size for the plotcon graph is:", size)
+        break
 
 Plot = f"plotcon -sequences '{protein_name}'_'{taxon_group}'_Aligned -graph png -winsize '{size}' -goutfile Align'{size}' --auto"
 
@@ -167,8 +175,11 @@ os.system(Plot)
 
 print(f" Your graph is stored as Align{size}.1.png")
 
+time.sleep(0.5)
+
 print("Please wait while your image is being displayed")
 print("This could take a while")
+print("Kindly close the image after viewing to continue with the programme")
 
 #using the matplotlib imported initially, this bit uses functions in it to display the output png image from plotcon
 
@@ -178,6 +189,8 @@ plt.axis('off')
 plt.show()
 
 #This lengthy section of code initiates by creating two distinct directories. One for storing all fasta files and the other for storing all patmatmotif files. The code takes the input fasta file and seperates each sequence present in it and saves each sequence as a seperate fasta file in the directory for individual fasta files. The code then runs patmatmotif on each individual fasta file and generates multiple .patmatmotif files and stores them in the directory for each patmatmotif file. The code then assimilates each patmatmotif file and creates one huge patmatmotif file with the list of domains of all sequences. The grep command in the end then goes to search the combined motif file and counts the specific motif and stores them in a seperate file
+
+time.sleep(0.5)
 
 fasta_dir = "Individual_fasta_files"
 os.mkdir(fasta_dir)
@@ -225,7 +238,7 @@ print("\n All patmatmotifs results are combined into combined_patmatmotifs_resul
 
 print("\n List of all motifs is stored in List_of_Motifs.txt")
 
-print("This next bit will convert your list of input protein fasta sequences into Nucleotide sequences which can later be used for further analysis")
+print("\n\nThis next bit will convert your list of input protein fasta sequences into Nucleotide sequences which can later be used for further analysis")
 
 #This bit uses an EMBOSS backtranseq programme which converts protein sequences into their corresponding initial Nucleotide codons. This can be used for future further processing in terms of evolutionary analyses, BLAST, similarity etc. This adds relevant biological data that can be later used for parallel analyses. 
 
@@ -234,6 +247,7 @@ os.system(PtoN)
 
 print("\n List of all Nucleotide codons for all sequences is stored in Nucleotide_sequences")
 
+time.sleep(0.5)
 
 Outro_message = "This brings us to the end of the Programme.\n Hope this Generic Python3 Programme/Script was useful in providing you the required data and was helpful.\n See ya!\n"
 
@@ -241,4 +255,3 @@ for char in Outro_message:
     time.sleep(0.080)
     sys.stdout.write(char)
     sys.stdout.flush()
-
